@@ -4,7 +4,7 @@ import dlib
 import numpy as np
 import argparse
 from wide_resnet import WideResNet
-
+import glob
 
 def get_args():
     parser = argparse.ArgumentParser(description="This script detects faces from web cam input, "
@@ -45,19 +45,9 @@ def main():
     model = WideResNet(img_size, depth=depth, k=k)()
     model.load_weights(weight_file)
 
-    # capture video
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-    while True:
-        # get video frame
-        ret, img = cap.read()
-
-        if not ret:
-            print("error: failed to capture image")
-            return -1
-
+    for x in glob.glob("test/*.jpg"):
+        img = cv2.imread(x, 3)
+        # img = imutils.resize(img, width=400)
         input_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img_h, img_w, _ = np.shape(input_img)
 
@@ -73,27 +63,20 @@ def main():
             yw2 = min(int(y2 + 0.4 * h), img_h - 1)
             cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
             # cv2.rectangle(img, (xw1, yw1), (xw2, yw2), (255, 0, 0), 2)
-            faces[i,:,:,:] = cv2.resize(img[yw1:yw2 + 1, xw1:xw2 + 1, :], (img_size, img_size))
+            faces[i, :, :, :] = cv2.resize(img[yw1:yw2 + 1, xw1:xw2 + 1, :], (img_size, img_size))
 
-        if len(detected) > 0:
+
+        if len(detected) == 1:
             # predict ages and genders of the detected faces
             results = model.predict(faces)
-            predicted_genders = results[0]
+            predicted_genders = "F" if results[0][0][0]>0.5 else "M"
             ages = np.arange(0, 101).reshape(101, 1)
-            predicted_ages = results[1].dot(ages).flatten()
-
-        # draw results
-        for i, d in enumerate(detected):
-            label = "{}, {}".format(int(predicted_ages[i]),
-                                    "F" if predicted_genders[i][0] > 0.5 else "M")
-            draw_label(img, (d.left(), d.top()), label)
-
-        cv2.imshow("result", img)
-        key = cv2.waitKey(30)
-
-        if key == 27:
-            break
-
+            predicted_ages = str(int(results[1][0].dot(ages).flatten()[0]))
+            print(x + " est:" + predicted_ages + " " + predicted_genders + " debug:" + str(results[0][0][0])+ " " + str(results[0][0][1]))
+        elif len(detected) > 1:
+            print("multiple faces detected... not supported yet")
+        else:
+            print("no faces detected... skipping")
 
 if __name__ == '__main__':
     main()

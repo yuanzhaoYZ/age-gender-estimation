@@ -16,6 +16,14 @@ Tested on:
 - macOS Sierra, Python 3.6.0, Keras 2.0.2, Tensorflow 1.0.0, Theano 0.9.0
 
 
+```bash
+conda create -n age-gender-estimation python=3.5 scipy numpy pandas tqdm h5py
+source activate age-gender-estimation
+conda install -c conda-forge keras
+conda install -c menpo opencv3
+conda install -c menpo dlib
+
+```
 ## Usage
 
 ### Use pretrained model
@@ -29,7 +37,13 @@ wget -P pretrained_models https://www.dropbox.com/s/rf8hgoev8uqjv3z/weights.18-4
 Run demo script (requires web cam)
 
 ```sh
-python3 demo.py
+python demo.py
+
+```
+
+Or Run standalone demo script (web cam not required)
+```sh
+python predict.py
 ```
 
 Model weights for Theano backend is also available from [here](https://drive.google.com/file/d/0B_cG1nzvVZlQWGJMc2JjdzkwcVk/view?usp=sharing).
